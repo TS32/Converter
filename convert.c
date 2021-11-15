@@ -666,25 +666,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     int columnsList[3]={1, 3, 5};
     const char *srcFile = openFileDialog("Open source file", "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0");
-    printf("srcFile=%s\n", srcFile);
+    //printf("srcFile=%s\n", srcFile);
 
     int width = get_columns_count(srcFile);
-    printf("width=%d\n", width);
+    //printf("width=%d\n", width);
 
     const char *dstFile = replace_file_ext(srcFile, ".bin");
-    printf("dstFile=%s\n", dstFile);
+    //printf("dstFile=%s\n", dstFile);
 
     const char *dstFile_hex = add_suffix_to_filename(srcFile, "_hex");
-    printf("dstFile_hex=%s\n", dstFile_hex);
+    //printf("dstFile_hex=%s\n", dstFile_hex);
 
     const char *dstFile_dec = add_suffix_to_filename(srcFile, "_dec");
-    printf("dstFile_dec=%s\n", dstFile_dec);
+   // printf("dstFile_dec=%s\n", dstFile_dec);
 
     const char *dstFile_column2 = add_suffix_to_filename(srcFile, "_column2");
-    printf("dstFile_column2=%s\n", dstFile_column2);
+    //printf("dstFile_column2=%s\n", dstFile_column2);
 
     const char *dstFile_afterDelete = add_suffix_to_filename(srcFile, "_afterDelete");
-    printf("dstFile_afterDelete=%s\n", dstFile_afterDelete);
+    //printf("dstFile_afterDelete=%s\n", dstFile_afterDelete);
         
     free((void *)srcFile);
     free((void *)dstFile);    
