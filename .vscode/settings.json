@@ -1,0 +1,20 @@
+{
+    "files.associations": {
+        "*.ipynb": "jupyter",
+        "*.ino": "cpp",
+        "*.pl": "perl",
+        "xiosbase": "c",
+        "*.ipp": "c",
+        "algorithm": "c",
+        "list": "c",
+        "memory": "c",
+        "random": "c",
+        "xhash": "c",
+        "xlocale": "c",
+        "xlocnum": "c",
+        "xtree": "c",
+        "xutility": "c",
+        "sstream": "c",
+        "strstream": "c"
+    }
+}
