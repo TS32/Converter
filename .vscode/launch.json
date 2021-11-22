@@ -4,6 +4,24 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        //add a configuration to run python file convert.py
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Run with Python3.7",
+            "program": "${file}",
+            "args": [
+                //"${file}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "PYTHONPATH": "C:\\Users\\James Sun\\.conda\\envs\\Python37\\python.exe"
+            },
+            "console": "internalConsole",
+            "internalConsoleOptions": "openOnSessionStart"
+        },   
+        
         {
             "name": "gcc.exe - 生成和调试活动文件",
             "type": "cppdbg",
