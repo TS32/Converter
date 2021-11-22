@@ -1,9 +1,3 @@
-/convert.exe
-/MainApp.cpp
-/numbers.bin
-/numbers.txt
-/numbers_afterDelete.txt
-/numbers_column.txt
-/numbers_column2.txt
-/numbers_dec.txt
-/numbers_hex.txt
+convert.exe
+/test/**
+tempCodeRunnerFile.c

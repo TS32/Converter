@@ -15,6 +15,13 @@
         "xtree": "c",
         "xutility": "c",
         "sstream": "c",
-        "strstream": "c"
+        "strstream": "c",
+        "xlocmon": "c"
+    },
+    "code-runner.executorMap": {
+        "python": "python",
+        "c": "cd $dir && gcc $fileName -l comdlg32 -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
     }
+    
 }
+

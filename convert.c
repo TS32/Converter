@@ -5,6 +5,8 @@
 #include <windows.h>
 #include <Commdlg.h>
 
+//Add link to the library, during compile and link, please add option '-l comdlg32' to the linker
+#pragma comment(lib, "comdlg32.lib")
 
 /*Read numbers from text file and convert them to hex, then store to a binary file */
 int txt2bin(const char *txt_file, const char *bin_file)
@@ -96,9 +98,70 @@ int bin2txt(const char *binFile, const char *txtFile, unsigned int width, unsign
     return length;
 }
 
+char * clean_string(char *inStr, char *char_to_remove,int num)
+// remove all characters in char_to_remove from inStr and store the result in outStr
+//char_to_remove is the array of characters to be removed, num is the number of characters in char_to_remove
+//return the pointer to the result string
+{
+    char *outStr;
+    int i, j, k;
+    //if num is 0 or char_to_remove is NULL, use predefined char_to_remove
+    if (num == 0 || char_to_remove == NULL)
+    {
+        char_to_remove = "\t";
+        num = 1;
+    }
+
+    //allocate memory for outStr
+    int len = strlen(inStr);    
+    outStr = (char *)malloc(len);
+
+    for (i = 0, j = 0; i < len; i++)
+    {
+        for (k = 0; k < num; k++)
+        {
+            if (inStr[i] == char_to_remove[k])
+            {
+                break;
+            }
+        }
+        if (k == num)
+        {
+            outStr[j++] = inStr[i];
+        }
+    }
+    outStr[j] = '\0';
+    return outStr;
+}
+
+char *single_pattern(char *inStr,char pattern)
+//replace the continuous pattern with one pattern character
+{
+    char *outStr;
+    int i, j;
+    int len = strlen(inStr);
+    outStr = (char *)malloc(len);
+
+    for (i = 0, j = 0; i < len; i++)
+    {
+        if (inStr[i] != pattern)
+        {
+            outStr[j++] = inStr[i];
+        }
+        else
+        {
+            if (i == 0 || inStr[i - 1] != pattern)
+            {
+                outStr[j++] = inStr[i];
+            }
+        }
+    }
+    outStr[j] = '\0';
+    return outStr;
+}
 
 //trim leading and tailing space from a string
-void line_trim(char *str)
+char * line_trim(char *str)
 {
     char *p = str;
     char *q = str;
@@ -107,52 +170,23 @@ void line_trim(char *str)
     while (*p != '\0')
         *q++ = *p++;
     *q = '\0';
+
+    //return the trimmed string
+    return p; 
 }
 
-/*Get the Nth column from a text file*/
-int get_column(const char *txtFile, int width, int column, const char *columnFile)
+//Check if a number in the array, element is unsigned integer
+unsigned int is_in_array(unsigned int *array, unsigned int length, unsigned int element)
 {
-    FILE *fp_txt, *fp_column;
-    char line[256];
-    char *token;
-    int count = 0;
-    int index = 0;
-    unsigned char num;
-
-    fp_txt = fopen(txtFile, "r");
-    if (fp_txt == NULL)
+    unsigned int i;
+    for (i = 0; i < length; i++)
     {
-        printf("Error: open file %s failed\n", txtFile);
-        return -1;
-    }
-
-    fp_column = fopen(columnFile, "w");
-    if (fp_column == NULL)
-    {
-        printf("Error: open file %s failed\n", columnFile);
-        return -1;
-    }
-
-    while (fgets(line, sizeof(line), fp_txt) != NULL)
-    {
-        token = strtok(line, " ");
-        while (token != NULL)
+        if (array[i] == element)
         {
-            count++;
-            if (count == column)
-            {
-                num = atoi(token);
-                //fwrite(&token, sizeof(unsigned char), 1, fp_column);
-                fprintf(fp_column, "0X%02X\n", num);
-                index++;
-            }
-            token = strtok(NULL, " ");
+            return 1;
         }
-        count = 0;
     }
-    fclose(fp_txt);
-    fclose(fp_column);
-    return index;
+    return 0;
 }
 
 //get the size of the file
@@ -251,19 +285,119 @@ int get_columns_count(const char *txtFile)
 
 }
 
-//Check if a number in the array, element is unsigned integer
-unsigned int is_in_array(unsigned int *array, unsigned int length, unsigned int element)
+/*Get the Nth column from a text file*/
+int get_column(const char *txtFile, int column, const char *columnFile)
 {
-    unsigned int i;
-    for (i = 0; i < length; i++)
+    FILE *fp_txt, *fp_column;
+    char line[256];
+    char *token;
+    int count = 0;
+    int index = 0;
+    unsigned char num;
+
+    fp_txt = fopen(txtFile, "r");
+    if (fp_txt == NULL)
     {
-        if (array[i] == element)
-        {
-            return 1;
-        }
+        printf("Error: open file %s failed\n", txtFile);
+        return -1;
     }
-    return 0;
+
+    fp_column = fopen(columnFile, "w");
+    if (fp_column == NULL)
+    {
+        printf("Error: open file %s failed\n", columnFile);
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), fp_txt) != NULL)
+    {
+        token = strtok(line, " ");
+        while (token != NULL)
+        {
+            count++;
+            if (count == column)
+            {
+                num = atoi(token);
+                //fwrite(&token, sizeof(unsigned char), 1, fp_column);
+                fprintf(fp_column, "0X%02X\n", num);
+                index++;
+            }
+            token = strtok(NULL, " ");
+        }
+        count = 0;
+    }
+    fclose(fp_txt);
+    fclose(fp_column);
+    return index;
 }
+
+/*Get multiple columns from a text file*/
+void get_columns(const char *txtFile, int total, int columnList[], const char *outFile)
+{
+    FILE *fp_txt, *fp_out;
+    char line[256],*pline;
+    char *token;
+    int count = 0;
+    int index = 0;
+    int i;
+    unsigned char num;   
+
+    fp_txt = fopen(txtFile, "r");
+    if (fp_txt == NULL)
+    {
+        printf("Error: open file %s failed\n", txtFile);
+        return;
+    }
+        
+    rewind(fp_txt);    
+    fp_out = fopen(outFile, "w");
+    if (fp_out == NULL)
+    {
+        printf("Error: open file %s failed\n", outFile);
+        return;
+    }
+
+    while (fgets(line, sizeof(line), fp_txt) != NULL)
+    {
+        pline = &line[0];                     
+        pline = clean_string(pline,NULL,0); //remove the '\t'
+        pline = single_pattern(pline,' ');  //remove duplicate space
+        pline = single_pattern(pline,'\n'); //remove dulicate newline
+
+        line_trim(pline);                          
+     
+        token = strtok(pline, " ");
+        while (token != NULL )
+        {
+            count++;           
+            //check if the current token contains newline
+            if (strchr(token, '\n') != NULL)
+            {
+                if(count>0)
+                {
+                    fprintf(fp_out, "\n");
+                    count = 0 ;
+                    break;
+                }
+                else //This is empty line
+                    break;
+                
+            }
+            else if(is_in_array(columnList, total, count))  //This column is in the list, should be kept
+            {            
+                num = atoi(token);
+                fprintf(fp_out, "%03d ", num);
+            }
+
+            token = strtok(NULL, " ");
+
+        }
+        count = 0;
+    }
+    fclose(fp_txt);
+    fclose(fp_out);
+}
+
 
 /*Delete the some columns from a text file*/
 void delete_columns(const char *txtFile, int total, int columnList[], const char *outFile)
@@ -604,15 +738,15 @@ char *add_suffix_to_filename(const char *fullPath, const char *suffix)
     int len = 0;
 
     char *filedir = get_file_dir(fullPath);    
-    printf("filedir: %s\n", filedir);        
+    //printf("filedir: %s\n", filedir);        
     char *oldfilename = get_file_name_without_ext(fullPath);    
-    printf("oldfilename: %s\n", oldfilename);
+    //printf("oldfilename: %s\n", oldfilename);
     char *oldext = get_file_ext(fullPath);   
-    printf("oldext: %s\n", oldext); 
+    //printf("oldext: %s\n", oldext); 
     char *newfilename = str_add_suffix(oldfilename, suffix);        
-    printf("newfilename: %s\n", newfilename);    
+    //printf("newfilename: %s\n", newfilename);    
     char *newfullPath = make_file_path(filedir, newfilename, oldext);
-    printf("newfullPath: %s\n", newfullPath);
+    //printf("newfullPath: %s\n", newfullPath);
             
     free(filedir);
     free(oldfilename);    
@@ -646,7 +780,7 @@ int main(void)
     txt2bin("numbers.txt", "numbers.bin");
     bin2txt("numbers.bin", "numbers_hex.txt", width, 1);
     bin2txt("numbers.bin", "numbers_dec.txt", width, 0);    
-    get_column("numbers_hex.txt", width, 2, "numbers_column2.txt");    
+    get_column("numbers_hex.txt", 2, "numbers_column2.txt");    
 
     dumpTextFile("numbers_dec.txt");    
     delete_columns("numbers_dec.txt", 3, columnsList, "numbers_afterDelete.txt");
@@ -683,12 +817,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     const char *dstFile_column2 = add_suffix_to_filename(srcFile, "_column2");
     //printf("dstFile_column2=%s\n", dstFile_column2);
 
+    const char *dstFile_column1_3_5 = add_suffix_to_filename(srcFile, "_column1_3_5");
+
     const char *dstFile_afterDelete = add_suffix_to_filename(srcFile, "_afterDelete");
     //printf("dstFile_afterDelete=%s\n", dstFile_afterDelete);
         
     free((void *)srcFile);
     free((void *)dstFile);    
     free((void *)dstFile_hex);
+
+    dumpTextFile(srcFile);  
+    get_columns(srcFile, 3,columnsList, dstFile_column1_3_5);
+    dumpTextFile(dstFile_column1_3_5);  
      
     dumpTextFile(srcFile);  
     txt2bin(srcFile, dstFile);    
@@ -701,7 +841,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     bin2txt(dstFile, dstFile_dec, width, 0);    
     dumpTextFile(dstFile_dec);
     
-    get_column(dstFile_hex, width, 2, dstFile_column2);
+    get_column(dstFile_hex, 2, dstFile_column2);
     dumpTextFile(dstFile_column2);
 
     dumpTextFile(dstFile_dec);   
@@ -715,7 +855,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     printf("\nfile=%s, size = %d bytes, lines=%d, columns= %d, number_of_int = %d \n",get_file_name(dstFile_afterDelete), size, lines, columns, count);
 
-    hexEditor(dstFile_afterDelete);
     return 0;
 }
 #endif
