@@ -10,13 +10,13 @@
 				"${file}",
 				"-l",
 				"comdlg32",
-				"-o",				
+				"-o",
 				"${fileDirname}\\${fileBasenameNoExtension}.exe"
 			],
 			"options": {
 				"cwd": "${fileDirname}"
 			},
-			"problemMatcher": [				
+			"problemMatcher": [
 				"$gcc"
 			],
 			"group": {
@@ -24,6 +24,7 @@
 				"isDefault": true
 			},
 			"detail": "编译器: C:\\msys64\\mingw64\\bin\\gcc.exe"
-		}		
+		}
+		
 	]
 }
