@@ -25,6 +25,7 @@
 			},
 			"detail": "编译器: C:\\msys64\\mingw64\\bin\\gcc.exe"
 		}
+		//Add a new task to generate debug active file
 		
 	]
 }
