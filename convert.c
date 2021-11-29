@@ -16,7 +16,6 @@ int txt2bin(const char *txt_file, const char *bin_file, unsigned int inHex)
     unsigned int length = 0;
     char *FMT = inHex ?"%x" : "%d";
 
-
     fp_txt = fopen(txt_file, "r");
     if (fp_txt == NULL)
     {
@@ -1203,18 +1202,25 @@ char *add_suffix_to_filename(const char *fullPath, const char *suffix)
 {
     char *filePath = NULL;
     char *p = NULL;
-    int len = 0;
+    int len = 0;  
+    char *filedir;
 
-    char *filedir = get_file_dir(fullPath);
-    //printf("filedir: %s\n", filedir);
+    //check if the fullPath contains a directory
+    if (strchr(fullPath, '\\') != NULL)    
+        filedir = get_file_dir(fullPath);           
+    else            
+        filedir = ".\\"; //if there is no directory, use the current directory
+           
+    printf("filedir: %s\n", filedir);
+
     char *oldfilename = get_file_name_without_ext(fullPath);
-    //printf("oldfilename: %s\n", oldfilename);
+    printf("oldfilename: %s\n", oldfilename);
     char *oldext = get_file_ext(fullPath);
-    //printf("oldext: %s\n", oldext);
+    printf("oldext: %s\n", oldext);
     char *newfilename = str_add_suffix(oldfilename, suffix);
-    //printf("newfilename: %s\n", newfilename);
+    printf("newfilename: %s\n", newfilename);
     char *newfullPath = make_file_path(filedir, newfilename, oldext);
-    //printf("newfullPath: %s\n", newfullPath);
+    printf("newfullPath: %s\n", newfullPath);
 
     free(filedir);
     free(oldfilename);
@@ -1239,91 +1245,6 @@ int delete_file(const char *fileName)
     }
 }
 
-int testCase_Console()
-{
-
-    int width = 9;
-    int columnsList[3] = {1, 3, 5};
-
-    txt2bin("numbers.txt", "numbers.bin",0);
-    bin2txt("numbers.bin", "numbers_hex.txt", width, 1);
-    bin2txt("numbers.bin", "numbers_dec.txt", width, 0);
-    get_column("numbers_hex.txt", 2, "numbers_column2.txt");
-
-    dumpTextFile("numbers_dec.txt");
-    delete_columns("numbers_dec.txt", 3, columnsList, "numbers_afterDelete.txt");
-    dumpTextFile("numbers_afterDelete.txt");
-
-    int size = getFileSize("numbers_afterDelete.txt");
-    int count = get_num_of_int("numbers_afterDelete.txt", 0);
-    int lines = get_num_of_int("numbers_afterDelete.txt", 1);
-    int columns = get_columns_count("numbers_afterDelete.txt");
-
-    printf("file=%s, size = %d bytes, lines=%d, columns= %d, number_of_int = %d \n", "numbers_afterDelete.txt", size, lines, columns, count);
-    return 0;
-}
-
-int testCase_GUI()
-{
-    int columnsList[3] = {1, 3, 5};
-    const char *srcFile = openFileDialog("Open source file", "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0");
-    //printf("srcFile=%s\n", srcFile);
-
-    int width = get_columns_count(srcFile);
-    //printf("width=%d\n", width);
-
-    const char *dstFile = replace_file_ext(srcFile, ".bin");
-    //printf("dstFile=%s\n", dstFile);
-
-    const char *dstFile_hex = add_suffix_to_filename(srcFile, "_hex");
-    //printf("dstFile_hex=%s\n", dstFile_hex);
-
-    const char *dstFile_dec = add_suffix_to_filename(srcFile, "_dec");
-    // printf("dstFile_dec=%s\n", dstFile_dec);
-
-    const char *dstFile_column2 = add_suffix_to_filename(srcFile, "_column2");
-    //printf("dstFile_column2=%s\n", dstFile_column2);
-
-    const char *dstFile_column1_3_5 = add_suffix_to_filename(srcFile, "_column1_3_5");
-
-    const char *dstFile_afterDelete = add_suffix_to_filename(srcFile, "_afterDelete");
-    //printf("dstFile_afterDelete=%s\n", dstFile_afterDelete);
-
-    free((void *)srcFile);
-    free((void *)dstFile);
-    free((void *)dstFile_hex);
-
-    dumpTextFile(srcFile);
-    get_columns(srcFile, 3, columnsList, dstFile_column1_3_5);
-    dumpTextFile(dstFile_column1_3_5);
-
-    dumpTextFile(srcFile);
-    txt2bin(srcFile, dstFile,0);
-
-    dumpBinaryFile(dstFile, width, 10, 0);
-
-    bin2txt(dstFile, dstFile_hex, width, 1);
-    dumpTextFile(dstFile_hex);
-
-    bin2txt(dstFile, dstFile_dec, width, 0);
-    dumpTextFile(dstFile_dec);
-
-    get_column(dstFile_hex, 2, dstFile_column2);
-    dumpTextFile(dstFile_column2);
-
-    dumpTextFile(dstFile_dec);
-    delete_columns(dstFile_dec, 3, columnsList, dstFile_afterDelete);
-    dumpTextFile(dstFile_afterDelete);
-
-    int size = getFileSize(dstFile_afterDelete);
-    int count = get_num_of_int(dstFile_afterDelete, 0);
-    int lines = get_num_of_int(dstFile_afterDelete, 1);
-    int columns = get_columns_count(dstFile_afterDelete);
-
-    printf("\nfile=%s, size = %d bytes, lines=%d, columns= %d, number_of_int = %d \n", get_file_name(dstFile_afterDelete), size, lines, columns, count);
-
-    return 0;
-}
 
 void generateTestData(const char *filename, unsigned int isTxt, unsigned int length, unsigned int numPerLine,unsigned char delimter, unsigned int isHex, unsigned int Leading0x,unsigned int flagLen,const char *flag)
 //generate some test data to file specified by filename.
@@ -1413,82 +1334,36 @@ void generateTestData(const char *filename, unsigned int isTxt, unsigned int len
     printf("Generate test data to file %s successfully! %d lines, %d per line\n", filename, lineID, numPerLine);
 
 }
-
-
-void testGUI2()
+int testCase_Console()
 {
-    
-    //pop up open file dialog to choose a binary file (*.bin or *.dat) for function bin2Frame
-    const char *srcFile = openFileDialog("Open source file", "Binary files (*.bin;*.dat)\0*.bin;*.dat\0All files (*.*)\0*.*\0");
-    printf("srcFile=%s\n", srcFile);
 
-    //generate a new file name with .txt extension
-    const char *dstFile = replace_file_ext(srcFile, ".txt");
-    printf("dstFile=%s\n", dstFile);
-
-    //add a suffix _frame to the file name
-    const char *dstFile_frame = add_suffix_to_filename(dstFile, "_frame");
-    printf("dstFile_frame=%s\n", dstFile_frame);
-
-    //add a suffix _dump to the dstFile_frame
-    const char *dstFile_dump = add_suffix_to_filename(dstFile_frame, "_dump");
-    printf("dstFile_dump=%s\n", dstFile_dump);
-
-    //convert txt to binary file again, make a filename
-
-    //now free the memory
-    //free((void *)srcFile);
-    free((void *)dstFile);
-
-    unsigned int frameLen = frameLen;
+    int width = 16;
+    int columnsList[3] = {1, 3, 5};
     unsigned int flagLen = 2;
-    unsigned char flag[2] = {0xEB, 0x90};
-    unsigned int frameCount = 0;
+    unsigned char flag[2] = {0x01, 0x02};
 
-    //convert the binary file to a frame file
-    unsigned int logFrameID  = 0; 
-    unsigned int checkerCount = 0;
-    unsigned int *checker = (unsigned int *)malloc(checkerCount * sizeof(unsigned int));
-    for (unsigned int i = 0; i < checkerCount; i++)
-    {
-        checker[i] = i+1; 
-    }
 
-    frameCount = bin2Frame(srcFile, dstFile_frame, frameLen, flag, flagLen, checker, checkerCount, logFrameID);
-    printf("frameCount=%d\n", frameCount);
+    generateTestData(".\\data\\numbers.txt", 1, width*100, width, ' ', 0, 0, flagLen, flag);
 
-    //dump the binary file to debug file
-    int linePerPage = 0;
-    dumpBinaryFileToFile(srcFile, dstFile_dump, frameLen, linePerPage);
+    txt2bin(".\\data\\numbers.txt", ".\\data\\numbers.bin",0);
+    bin2txt(".\\data\\numbers.bin", ".\\data\\numbers_hex.txt", width, 1);
+    bin2txt(".\\data\\numbers.bin", ".\\data\\numbers_dec.txt", width, 0);
+    get_column(".\\data\\numbers_hex.txt", 2, ".\\data\\numbers_column2.txt");
 
-    //get column 3 to column 15 to another file, 12 columns in total
-    int columnsList[13] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    
-    const char *dstFile_column3_15 = add_suffix_to_filename(srcFile, "_column3_15");
+    dumpTextFile(".\\data\\numbers_dec.txt");
+    delete_columns(".\\data\\numbers_dec.txt", 3, columnsList, ".\\data\\numbers_afterDelete.txt");
+    dumpTextFile(".\\data\\numbers_afterDelete.txt");
 
-    get_columns(dstFile_frame, 13, columnsList, dstFile_column3_15); 
+    int size = getFileSize(".\\data\\numbers_afterDelete.txt");
+    int count = get_num_of_int(".\\data\\numbers_afterDelete.txt", 0);
+    int lines = get_num_of_int(".\\data\\numbers_afterDelete.txt", 1);
+    int columns = get_columns_count(".\\data\\numbers_afterDelete.txt");
 
-    const char *dstFile_column3_15_bin = replace_file_ext(dstFile_column3_15, ".bin");
-
-    dumpTextFile(dstFile_column3_15);
-    txt2bin(dstFile_column3_15,dstFile_column3_15_bin,0);
-    
-
-    //free the memory       
-    free((void *)dstFile_frame);
-    free((void *)dstFile_dump);
-
-    printf("\n-Done!-\n");
-
+    printf("file=%s, size = %d bytes, lines=%d, columns= %d, number_of_int = %d \n", "numbers_afterDelete.txt", size, lines, columns, count);
+    return 0;
 }
-#ifndef _WIN32
-int main(void)
-{
-    return 1;
-}
-#else
-//Standard windows main function
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+
+int testCase_GUI()
 {
     unsigned int framesNumber=50;
     unsigned int frameLen = 16;    
@@ -1498,9 +1373,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     unsigned int totalLength = framesNumber * frameLen;
     
     //txt to bin
-    const char *txtFile_dec = "txt_in_dec.txt"; //DEC Text
-    const char *txtFile_hex_no0x = "txt_in_hex_no0x.txt"; //HEX Text
-    const char *txtFile_hex_with_0x = "txt_in_hex_with_0x.txt"; //HEX Text
+    const char *txtFile_dec = ".\\data\\txt_in_dec.txt"; //DEC Text
+    const char *txtFile_hex_no0x = ".\\data\\txt_in_hex_no0x.txt"; //HEX Text
+    const char *txtFile_hex_with_0x = ".\\data\\txt_in_hex_with_0x.txt"; //HEX Text
     
     const char *binFile_from_dec = replace_file_ext(txtFile_dec,".bin");
     const char *binFile_from_hex_no0x = replace_file_ext(txtFile_hex_no0x,".bin");
@@ -1533,13 +1408,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     dumpBinaryFile(binFile_from_hex_with_0x, frameLen, 0, 0);
     printf("\n--Example 3 Done--\n");  
 
-
-
     printf("\n- Example 4: Convert bin file to frames in text- \n");
     //bin to frames
-    const char *binFile_from_dec_frame = replace_file_ext(binFile_from_dec,"_frame");
-    const char *binFile_from_hex_no0x_frame = replace_file_ext(binFile_from_hex_no0x,"_frame");
-    const char *binFile_from_hex_with_0x_frame = replace_file_ext(binFile_from_hex_with_0x,"_frame");
+    //get the fullpath of the binary file       
+    const char *binFile_from_dec_frame = add_suffix_to_filename(binFile_from_dec,"_frame");
+    const char *binFile_from_hex_no0x_frame = add_suffix_to_filename(binFile_from_hex_no0x,"_frame");
+    const char *binFile_from_hex_with_0x_frame = add_suffix_to_filename(binFile_from_hex_with_0x,"_frame");
 
     //convert from a binary file to a frame file
     unsigned int logFrameID  = 0;   //Dont' log frame ID
@@ -1555,9 +1429,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     //dump the binary file to debug file, first create filename
     printf("\n- Example 5: Convert bin file to debug comparsion frames in text- \n");
-    const char *binFile_from_dec_dump = replace_file_ext(binFile_from_dec,"_dump");
-    const char *binFile_from_hex_no0x_dump = replace_file_ext(binFile_from_hex_no0x,"_dump");
-    const char *binFile_from_hex_with_0x_dump = replace_file_ext(binFile_from_hex_with_0x,"_dump");
+    const char *binFile_from_dec_dump = add_suffix_to_filename(binFile_from_dec,"_dump");
+    const char *binFile_from_hex_no0x_dump = add_suffix_to_filename(binFile_from_hex_no0x,"_dump");
+    const char *binFile_from_hex_with_0x_dump = add_suffix_to_filename(binFile_from_hex_with_0x,"_dump");
 
     dumpBinaryFileToFile(binFile_from_dec, binFile_from_dec_dump, frameLen, 0);
     dumpBinaryFileToFile(binFile_from_hex_no0x, binFile_from_hex_no0x_dump, frameLen, 0);
@@ -1567,9 +1441,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     //get some columns from the txt file    
     printf("\n- Example 6: Get some columns from the txt data file  to a new file -\n");
-    const char *txtFile_dec_col = replace_file_ext(txtFile_dec,"_col");
-    const char *txtFile_hex_no0x_col = replace_file_ext(txtFile_hex_no0x,"_col");
-    const char *txtFile_hex_with_0x_col = replace_file_ext(txtFile_hex_with_0x,"_col");
+    const char *txtFile_dec_col = add_suffix_to_filename(txtFile_dec,"_col");
+    const char *txtFile_hex_no0x_col = add_suffix_to_filename(txtFile_hex_no0x,"_col");
+    const char *txtFile_hex_with_0x_col = add_suffix_to_filename(txtFile_hex_with_0x,"_col");
 
     unsigned int col_num = 10;
     unsigned int col_list[] ={3,4,5,6,7,8,9,10,11,12};
@@ -1601,9 +1475,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     free((void *)binFile_from_hex_with_0x_frame);   
 
     //wait for user input
-    printf("\n--All tests Done--\n");    
-    
+    printf("\n--All tests Done--\n");        
 
     return 0;
+}
+
+#ifndef _WIN32
+int main(void)
+{
+    unsigned char file_name[] = "test.txt";
+    unsigned char file_name_bin[] = "test.bin";
+    txt2bin(file_name, file_name_bin,0);
+    return 0;
+}
+#else
+//Standard windows main function
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+  testCase_GUI();
+  //testCase_Console();
+  return 0;
 }
 #endif
